@@ -1,0 +1,30 @@
+Ciudades
+Constantinopla 2 5
+Cartago 1 4
+Roma 3 9
+París 3 7
+Toledo 8 6
+Kursk 8 9
+Stalingrado 7 3
+Tobruk 5 3
+Numancia 8 1
+Berlin 5 6
+Marathon 8 3
+Jerusalen 3 6
+
+Carreteras
+Cartago Constantinopla
+Constantinopla Jerusalen
+Constantinopla Tobruk
+Jerusalen Paris
+Jerusalen Berlin
+Paris Roma
+Roma Berlin
+Tobruk Stalingrado
+Berlin Kursk
+Berlin Toledo
+Berlin Tobruk
+Toledo Stalingrado
+Stalingrado Marathon
+Stalingrado Numancia
+
