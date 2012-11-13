@@ -1,5 +1,7 @@
+import java.util.ArrayList;
 import java.util.List;
 
+//Implements a City
 public class City {
 
 	private String name;
@@ -11,6 +13,7 @@ public class City {
 		this.setName(name);
 		this.setX(x);
 		this.setY(y);
+		connectedCities=new ArrayList<City>(0);
 	}
 
 	public int getX() {
@@ -47,7 +50,6 @@ public class City {
 
 	public String toString() {
 		String output = "City: " + name + ", (" + x + "," + y + ")";
-		output += "->Roads to: " + connectedCities.toString();
 		return output;
 	}
 }

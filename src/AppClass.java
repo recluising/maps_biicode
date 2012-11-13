@@ -1,4 +1,4 @@
-
+//Application class
 public class AppClass {
 
 	/**
@@ -9,9 +9,11 @@ public class AppClass {
 				
 		PathCalculator pathCalculator=new PathCalculator();
 		
+		//Initialize the roadMap
 		pathCalculator.initMap(roadMapTextFile);
 		
-		
+		//Find path from Roma to Constantinopla
+		pathCalculator.findPath("Roma","Constantinopla");
 	}
 
 }

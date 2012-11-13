@@ -4,10 +4,10 @@ import java.io.FileReader;
 import java.util.HashMap;
 import java.util.List;
 
-//Implement the interface PathSearchEngine with the A* algorithm
+//Implement the interface PathSearchEngine with the A* algorithm and reading from a text file
 public class PathCalculator implements PathSearchEngine {
 
-	private HashMap<String, City> roadMap=new HashMap<String,City>();
+	private HashMap<String, City> roadMap = new HashMap<String, City>();
 	private String path;
 
 	public PathCalculator() {
@@ -64,7 +64,7 @@ public class PathCalculator implements PathSearchEngine {
 	}
 
 	@Override
-	public void findPath(City origin, City destiny) {
+	public void findPath(String origin, String destiny) {
 		// TODO Auto-generated method stub
 
 	}
