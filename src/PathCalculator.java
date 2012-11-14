@@ -1,8 +1,11 @@
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 //Implement the interface PathSearchEngine with the A* algorithm and reading from a text file
 public class PathCalculator implements PathSearchEngine {
@@ -65,8 +68,65 @@ public class PathCalculator implements PathSearchEngine {
 
 	@Override
 	public void findPath(String origin, String destiny) {
-		// TODO Auto-generated method stub
 
+		// Initializing maps
+		HashMap<City, Double> closedSet = new HashMap();
+		HashMap<City, Double> openSet = new HashMap();
+		HashMap<City, Double> cameFrom = new HashMap();
+		HashMap<City, Double> gScore = new HashMap();
+		HashMap<City, Double> fScore = new HashMap();
+
+		// Feching cities
+		City start = roadMap.get(origin);
+		City goal = roadMap.get(destiny);
+
+		// Creating firsts values for maps
+		gScore.put(start, Double.parseDouble("0"));
+		fScore.put(start, gScore.get(start)
+				+ heuristicCostEstimate(start, goal));
+		openSet.put(start, fScore.get(start));
+
+		// A* Running!
+		while (!openSet.isEmpty()) {
+
+			// Finding the min fScore City
+			City current = null;
+			Double min = Collections.min(openSet.values());
+
+			Iterator it = openSet.entrySet().iterator();
+			
+			while (it.hasNext()) {
+				Map.Entry e = (Map.Entry) it.next();
+				if (((int) e.getValue()) == min) {
+					current = (City) e.getKey();
+					break;
+				}
+			}
+			
+			//Checking if it is the goal city
+			if (current.equals(goal))
+				reconstructPath(cameFrom, goal);
+
+			//Removing from openSet
+			openSet.remove(current);
+			
+			//EVALUATION OF CONNECTED CITIES
+		}
+	}
+
+	private void reconstructPath(HashMap<City, Double> cameFrom, City goal) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private double calculateDistance(City start, City end) {
+		return Math.sqrt(Math.pow((start.getX() - end.getX()), 2)
+				+ Math.pow((start.getY() - end.getY()), 2));
+	}
+
+	private double heuristicCostEstimate(City start, City end) {
+		// Heuristic function to be created
+		return 0;
 	}
 
 	@Override
@@ -78,7 +138,7 @@ public class PathCalculator implements PathSearchEngine {
 	private void addRoadToCities(String line) {
 		// Processing the text line
 		String[] cities = line.split(",");
-		
+
 		// Setting the road
 		roadMap.get(cities[0]).add(roadMap.get(cities[1]));
 		roadMap.get(cities[1]).add(roadMap.get(cities[0]));
