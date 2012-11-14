@@ -124,9 +124,8 @@ public class PathCalculator implements PathSearchEngine {
 				+ Math.pow((start.getY() - end.getY()), 2));
 	}
 
-	private double heuristicCostEstimate(City start, City end) {
-		// Heuristic function to be created
-		return 0;
+	private double heuristicCostEstimate(City current, City goal) {
+		return calculateDistance(current, goal);
 	}
 
 	@Override
