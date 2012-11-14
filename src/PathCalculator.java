@@ -1,11 +1,13 @@
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 //Implement the interface PathSearchEngine with the A* algorithm and reading from a text file
 public class PathCalculator implements PathSearchEngine {
@@ -70,9 +72,9 @@ public class PathCalculator implements PathSearchEngine {
 	public void findPath(String origin, String destiny) {
 
 		// Initializing maps
-		HashMap<City, Double> closedSet = new HashMap();
+		List<City> closedSet = new ArrayList();
 		HashMap<City, Double> openSet = new HashMap();
-		HashMap<City, Double> cameFrom = new HashMap();
+		HashMap<City, City> cameFrom = new HashMap();
 		HashMap<City, Double> gScore = new HashMap();
 		HashMap<City, Double> fScore = new HashMap();
 
@@ -94,31 +96,58 @@ public class PathCalculator implements PathSearchEngine {
 			Double min = Collections.min(openSet.values());
 
 			Iterator it = openSet.entrySet().iterator();
-			
+
 			while (it.hasNext()) {
 				Map.Entry e = (Map.Entry) it.next();
-				if (((int) e.getValue()) == min) {
+				if (((double) e.getValue()) == min) {
 					current = (City) e.getKey();
 					break;
 				}
 			}
-			
-			//Checking if it is the goal city
+
+			// Checking if it is the goal city
 			if (current.equals(goal))
 				reconstructPath(cameFrom, goal);
 
-			//Removing from openSet
+			// Removing from openSet
 			openSet.remove(current);
-			
-			//EVALUATION OF CONNECTED CITIES
+			closedSet.add(current);
+
+			// Evaluating connected cities
+			for (City city : current.getConnectedCities()) {
+				if (closedSet.contains(city))
+					continue;
+
+				double tentativeGScore = gScore.get(current)
+						+ calculateDistance(current, city);
+
+				if (!openSet.containsKey(city)
+						|| tentativeGScore <= gScore.get(city)) {
+					cameFrom.put(city, current);
+					gScore.put(city, tentativeGScore);
+					fScore.put(city,
+							gScore.get(city)
+									+ heuristicCostEstimate(city, goal));
+
+					if (!openSet.containsKey(city))
+						openSet.put(city, fScore.get(city));
+				}
+			}
 		}
 	}
 
-	private void reconstructPath(HashMap<City, Double> cameFrom, City goal) {
-		// TODO Auto-generated method stub
-		
+	// rebuilding path
+	private String reconstructPath(HashMap<City, City> cameFrom, City goal) {
+		if (cameFrom.containsKey(goal)) {
+			path = reconstructPath(cameFrom, cameFrom.get(goal));
+			return (path + ">" + goal.getName());
+		} else {
+			return goal.getName();
+		}
+
 	}
 
+	// calculate the distance
 	private double calculateDistance(City start, City end) {
 		return Math.sqrt(Math.pow((start.getX() - end.getX()), 2)
 				+ Math.pow((start.getY() - end.getY()), 2));
@@ -130,8 +159,7 @@ public class PathCalculator implements PathSearchEngine {
 
 	@Override
 	public void printPath() {
-		// TODO Auto-generated method stub
-
+		System.out.println(path);
 	}
 
 	private void addRoadToCities(String line) {
