@@ -140,7 +140,8 @@ public class PathCalculator implements PathSearchEngine {
 	private String reconstructPath(HashMap<City, City> cameFrom, City goal) {
 		if (cameFrom.containsKey(goal)) {
 			path = reconstructPath(cameFrom, cameFrom.get(goal));
-			return (path + ">" + goal.getName());
+			path+= ">" + goal.getName();
+			return (path);
 		} else {
 			return goal.getName();
 		}

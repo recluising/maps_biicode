@@ -17,8 +17,13 @@ public class AppClass {
 
 		pathCalculator.printPath();
 
-		// Find path from Roma to Constantinopla
+		// Find path from Numancia to Cartago
 		pathCalculator.findPath("Numancia", "Cartago");
+
+		pathCalculator.printPath();
+		
+		// Find path from Cartago to Kursk
+		pathCalculator.findPath("Cartago", "Kursk");
 
 		pathCalculator.printPath();
 	}
