@@ -1,6 +1,11 @@
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -14,8 +19,72 @@ public class PathCalculator implements PathSearchEngine {
 
 	private HashMap<String, City> roadMap = new HashMap<String, City>();
 	private String path;
+	Connection conn;
 
 	public PathCalculator() {
+		connect();
+	}
+
+	private void connect() {
+		Connection conn;
+		try {
+			conn = DriverManager.getConnection(
+					"jdbc:mysql://www.luisrecio.es/qpbcdjoi_biicode_maps",
+					"qpbcdjoi_biicode", "root1");
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	private void addPathToDB(String origin, String destiny, String path)
+			throws SQLException {
+		Statement stmt = conn.createStatement();
+		int cont = 0;
+		try {
+			ResultSet rs = stmt
+					.executeQuery("SELECT count(*) as numberOfRecords FROM routes where origin ='"
+							+ origin + "' and destiny ='" + destiny + "''");
+			try {
+				if (rs.getString("numberOfRecords") == "1") {
+					rs = stmt
+							.executeQuery("SELECT  * FROM routes where origin ='"
+									+ origin
+									+ "' and destiny ='"
+									+ destiny
+									+ "''");
+					cont = Integer.parseInt(rs.getString("searchedTimes"));
+					stmt.executeQuery("update routes set searchedTimes='"
+							+ (++cont) + "' where origin ='" + origin
+							+ "' and destiny ='" + destiny + "''");
+				} else
+					rs = stmt
+							.executeQuery("insert into routes values ('"
+									+ origin + "','" + destiny + "','" + path
+									+ "','1'");
+			} finally {
+				try {
+					rs.close();
+				} catch (Throwable ignore) { /*
+											 * Propagate the original exception
+											 * instead of this one that you may
+											 * want just logged
+											 */
+				}
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				stmt.close();
+			} catch (Throwable ignore) { /*
+										 * Propagate the original exception
+										 * instead of this one that you may want
+										 * just logged
+										 */
+			}
+		}
 	}
 
 	@Override
@@ -106,9 +175,15 @@ public class PathCalculator implements PathSearchEngine {
 			}
 
 			// Checking if it is the goal city
-			if (current.equals(goal))
+			if (current.equals(goal)) {
 				reconstructPath(cameFrom, goal);
-
+				try {
+					addPathToDB(origin, destiny, path);
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 			// Removing from openSet
 			openSet.remove(current);
 			closedSet.add(current);
@@ -140,7 +215,7 @@ public class PathCalculator implements PathSearchEngine {
 	private String reconstructPath(HashMap<City, City> cameFrom, City goal) {
 		if (cameFrom.containsKey(goal)) {
 			path = reconstructPath(cameFrom, cameFrom.get(goal));
-			path+= ">" + goal.getName();
+			path += ">" + goal.getName();
 			return (path);
 		} else {
 			return goal.getName();
