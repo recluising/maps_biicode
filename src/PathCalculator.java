@@ -19,6 +19,7 @@ public class PathCalculator implements PathSearchEngine {
 	private HashMap<String, City> roadMap = new HashMap<String, City>();
 	private String path;
 	Connection conn;
+	int visitedTimesPath = 1;
 
 	public PathCalculator() {
 		connect();
@@ -53,6 +54,8 @@ public class PathCalculator implements PathSearchEngine {
 				stmt.executeUpdate("update routes set searchedTimes='"
 						+ (++cont) + "' where origin ='" + origin
 						+ "' and destiny ='" + destiny + "'");
+
+				visitedTimesPath = cont;
 			} else {
 				stmt.executeUpdate("insert into routes values ('" + origin
 						+ "','" + destiny + "','" + path + "','1')");
@@ -95,6 +98,27 @@ public class PathCalculator implements PathSearchEngine {
 			} catch (Throwable ignore) {
 			}
 		}
+	}
+
+	// obtain the top 5 list of visited cities
+	private String getTopFive() throws SQLException {
+		Statement stmt = conn.createStatement();
+		String output = "Top 5: ";
+		try {
+			ResultSet rs = stmt.executeQuery("SELECT * FROM visitedCities order by visitedTimes desc limit 5");
+			while (rs.next()) {
+				output += rs.getString("visitedCity") + "("
+						+ rs.getString("visitedTimes") + "), ";
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				stmt.close();
+			} catch (Throwable ignore) {
+			}
+		}
+		return output;
 	}
 
 	@Override
@@ -243,13 +267,19 @@ public class PathCalculator implements PathSearchEngine {
 				+ Math.pow((start.getY() - end.getY()), 2));
 	}
 
+	//HeuristicCostEstimation
 	private double heuristicCostEstimate(City current, City goal) {
 		return calculateDistance(current, goal);
 	}
 
 	@Override
 	public void printPath() {
-		System.out.println(path);
+		try {
+			System.out.println("\n\n"+path + " " + visitedTimesPath
+					+ " times visited - \n" + getTopFive());
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 	// Add toad to cities

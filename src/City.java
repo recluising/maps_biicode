@@ -1,5 +1,5 @@
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 //Implements a City
 public class City {
@@ -7,13 +7,13 @@ public class City {
 	private String name;
 	private int x;
 	private int y;
-	private List<City> connectedCities;
+	private Set<City> connectedCities;
 
 	public City(String name, int x, int y) {
 		this.setName(name);
 		this.setX(x);
 		this.setY(y);
-		connectedCities=new ArrayList<City>(0);
+		connectedCities=new HashSet<City>();
 	}
 
 	public int getX() {
@@ -36,7 +36,7 @@ public class City {
 		connectedCities.add(city);
 	}
 
-	public List<City> getConnectedCities() {
+	public Set<City> getConnectedCities() {
 		return connectedCities;
 	}
 

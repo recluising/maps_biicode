@@ -14,6 +14,8 @@ The cities are loaded in the application by processing a text file with the x,y 
 
 The used algorithm is A*.
 
+A MySQL Remote DB is used in order to allocate some stats about the searched routes.
 
+An application class has been used in order to test this program.
 
 --Luis Recio Morán
