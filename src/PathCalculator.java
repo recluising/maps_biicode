@@ -11,8 +11,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
 
 //Implement the interface PathSearchEngine with the A* algorithm and reading from a text file
 public class PathCalculator implements PathSearchEngine {
@@ -25,18 +24,18 @@ public class PathCalculator implements PathSearchEngine {
 		connect();
 	}
 
+	// Create the DB connection
 	private void connect() {
-		Connection conn;
 		try {
 			conn = DriverManager.getConnection(
-					"jdbc:mysql://www.luisrecio.es/qpbcdjoi_biicode_maps",
+					"jdbc:mysql://luisrecio.es/qpbcdjoi_biicode_maps",
 					"qpbcdjoi_biicode", "root1");
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
+	// Add path to DB or update the existing path with more visits
 	private void addPathToDB(String origin, String destiny, String path)
 			throws SQLException {
 		Statement stmt = conn.createStatement();
@@ -44,45 +43,56 @@ public class PathCalculator implements PathSearchEngine {
 		try {
 			ResultSet rs = stmt
 					.executeQuery("SELECT count(*) as numberOfRecords FROM routes where origin ='"
-							+ origin + "' and destiny ='" + destiny + "''");
-			try {
-				if (rs.getString("numberOfRecords") == "1") {
-					rs = stmt
-							.executeQuery("SELECT  * FROM routes where origin ='"
-									+ origin
-									+ "' and destiny ='"
-									+ destiny
-									+ "''");
-					cont = Integer.parseInt(rs.getString("searchedTimes"));
-					stmt.executeQuery("update routes set searchedTimes='"
-							+ (++cont) + "' where origin ='" + origin
-							+ "' and destiny ='" + destiny + "''");
-				} else
-					rs = stmt
-							.executeQuery("insert into routes values ('"
-									+ origin + "','" + destiny + "','" + path
-									+ "','1'");
-			} finally {
-				try {
-					rs.close();
-				} catch (Throwable ignore) { /*
-											 * Propagate the original exception
-											 * instead of this one that you may
-											 * want just logged
-											 */
-				}
+							+ origin + "' and destiny ='" + destiny + "'");
+			rs.next();
+			if (rs.getString("numberOfRecords").equalsIgnoreCase("1")) {
+				rs = stmt.executeQuery("SELECT  * FROM routes where origin ='"
+						+ origin + "' and destiny ='" + destiny + "'");
+				rs.next();
+				cont = Integer.parseInt(rs.getString("searchedTimes"));
+				stmt.executeUpdate("update routes set searchedTimes='"
+						+ (++cont) + "' where origin ='" + origin
+						+ "' and destiny ='" + destiny + "'");
+			} else {
+				stmt.executeUpdate("insert into routes values ('" + origin
+						+ "','" + destiny + "','" + path + "','1')");
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			try {
 				stmt.close();
-			} catch (Throwable ignore) { /*
-										 * Propagate the original exception
-										 * instead of this one that you may want
-										 * just logged
-										 */
+			} catch (Throwable ignore) {
+			}
+		}
+	}
+
+	// Add the visited city or update it with more visits
+	private void updateVisitedCities(String city) throws SQLException {
+		Statement stmt = conn.createStatement();
+		int cont = 0;
+		try {
+			ResultSet rs = stmt
+					.executeQuery("SELECT count(*) as numberOfRecords FROM visitedCities where visitedCity='"
+							+ city + "'");
+			rs.next();
+			if (rs.getString("numberOfRecords").equalsIgnoreCase("1")) {
+				rs = stmt
+						.executeQuery("SELECT  * FROM visitedCities where visitedCity='"
+								+ city + "'");
+				rs.next();
+				cont = Integer.parseInt(rs.getString("visitedTimes"));
+				stmt.executeUpdate("update visitedCities set visitedTimes='"
+						+ (++cont) + "' where visitedCity ='" + city + "'");
+			} else
+				stmt.executeUpdate("insert into visitedCities values ('" + city
+						+ "','1')");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				stmt.close();
+			} catch (Throwable ignore) {
 			}
 		}
 	}
@@ -141,11 +151,11 @@ public class PathCalculator implements PathSearchEngine {
 	public void findPath(String origin, String destiny) {
 
 		// Initializing maps
-		List<City> closedSet = new ArrayList();
-		HashMap<City, Double> openSet = new HashMap();
-		HashMap<City, City> cameFrom = new HashMap();
-		HashMap<City, Double> gScore = new HashMap();
-		HashMap<City, Double> fScore = new HashMap();
+		List<City> closedSet = new ArrayList<City>();
+		HashMap<City, Double> openSet = new HashMap<City, Double>();
+		HashMap<City, City> cameFrom = new HashMap<City, City>();
+		HashMap<City, Double> gScore = new HashMap<City, Double>();
+		HashMap<City, Double> fScore = new HashMap<City, Double>();
 
 		// Feching cities
 		City start = roadMap.get(origin);
@@ -164,10 +174,10 @@ public class PathCalculator implements PathSearchEngine {
 			City current = null;
 			Double min = Collections.min(openSet.values());
 
-			Iterator it = openSet.entrySet().iterator();
+			Iterator<Entry<City, Double>> it = openSet.entrySet().iterator();
 
 			while (it.hasNext()) {
-				Map.Entry e = (Map.Entry) it.next();
+				Entry<City, Double> e = it.next();
 				if (((double) e.getValue()) == min) {
 					current = (City) e.getKey();
 					break;
@@ -180,7 +190,6 @@ public class PathCalculator implements PathSearchEngine {
 				try {
 					addPathToDB(origin, destiny, path);
 				} catch (SQLException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -199,6 +208,11 @@ public class PathCalculator implements PathSearchEngine {
 				if (!openSet.containsKey(city)
 						|| tentativeGScore <= gScore.get(city)) {
 					cameFrom.put(city, current);
+					try {
+						updateVisitedCities(city.getName());
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
 					gScore.put(city, tentativeGScore);
 					fScore.put(city,
 							gScore.get(city)
@@ -238,6 +252,7 @@ public class PathCalculator implements PathSearchEngine {
 		System.out.println(path);
 	}
 
+	// Add toad to cities
 	private void addRoadToCities(String line) {
 		// Processing the text line
 		String[] cities = line.split(",");
@@ -247,6 +262,7 @@ public class PathCalculator implements PathSearchEngine {
 		roadMap.get(cities[1]).add(roadMap.get(cities[0]));
 	}
 
+	// Add a city from a text line got from the file
 	private void addCityFromText(String line) {
 		// Processing the text line
 		String[] cities = line.split(",");
